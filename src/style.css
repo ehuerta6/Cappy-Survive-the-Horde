@@ -1,0 +1,27 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #151c20; color: #e4e9e9; font: 14px system-ui, sans-serif; }
+main { max-width: 1500px; margin: auto; padding: 20px; }
+header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+h1 { margin: 0 0 5px; font-size: 24px; } p { margin: 6px 0; color: #b7c5ca; line-height: 1.5; }
+.badge { font-size: 11px; color: #d0b38a; border: 1px solid #5b5040; padding: 6px 9px; }
+.workspace { display: grid; grid-template-columns: 3fr 2fr; gap: 14px; }
+.world-panel, .code-panel, .details section { border: 1px solid #38454d; background: #1c262c; min-width: 0; }
+.panel-title { height: 38px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 11px; letter-spacing: 1px; border-bottom: 1px solid #38454d; }
+.panel-title span { color: #9baeb4; letter-spacing: 0; }
+.canvas-wrap { height: 440px; position: relative; } canvas { display: block; width: 100%; height: 100%; outline: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 15px; padding: 10px; font-size: 11px; color: #b7c5ca; }
+.editor { height: 315px; }
+.buttons { padding: 10px; display: flex; gap: 8px; }
+button { cursor: pointer; background: #344850; color: white; border: 1px solid #62747d; padding: 8px 14px; font: inherit; }
+button:hover { background: #49616a; } button:disabled { opacity: .4; cursor: default; }
+.horde-button { margin-left: auto; background: #664639; }
+.output { margin: 0; padding: 10px 12px; height: 120px; overflow: auto; font-size: 12px; background: #11191d; white-space: pre-wrap; overflow-wrap: anywhere; }
+.hud { margin: 14px 0; padding: 14px; display: flex; justify-content: space-between; gap: 20px; border: 1px solid #38454d; background: #1c262c; }
+.hud small { display: block; font-size: 10px; color: #9baeb4; margin-bottom: 5px; }
+.hud strong { font-size: 15px; }
+.details { display: grid; grid-template-columns: 3fr 2fr; gap: 14px; }
+.details section { padding: 12px; } h3 { font-size: 13px; margin: 0 0 10px; }
+.log { height: 170px; overflow: auto; font: 12px/1.7 monospace; color: #b9cfc1; }
+.help { font-size: 12px; } code { color: #e0b981; }
+.result { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; background: #10191cdd; }
+.result h2 { font-size: 32px; margin: 0 0 5px; }.result button { margin-top: 14px; }
