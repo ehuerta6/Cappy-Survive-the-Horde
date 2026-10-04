@@ -24,18 +24,30 @@ export function World({ simulation }: { simulation: Simulation }) {
     const base = MeshBuilder.CreateBox('base', { width: 1.6, depth: 1.6, height: 1.4 }, scene); base.position.set(BASE.x, 0.7, BASE.z); base.material = baseMat;
     const chest = MeshBuilder.CreateBox('chest', { width: 0.85, depth: 0.65, height: 0.6 }, scene); chest.position.set(CHEST.x, 0.3, CHEST.z); chest.material = chestMat;
     const cappy = MeshBuilder.CreateCapsule('cappy', { height: 1.15, radius: 0.32 }, scene); cappy.material = cappyMat;
-    const trees = new Map<number, Mesh[]>();
-    simulation.state.trees.forEach(tree => {
-      const trunk = MeshBuilder.CreateCylinder(`trunk-${tree.id}`, { height: 1, diameter: 0.25 }, scene); trunk.position.set(tree.x, 0.5, tree.z); trunk.material = bark;
-      const crown = MeshBuilder.CreateSphere(`tree-${tree.id}`, { diameter: 1.2, segments: 6 }, scene); crown.position.set(tree.x, 1.4, tree.z); crown.material = leaves;
-      trees.set(tree.id, [trunk, crown]);
+    const nodeMeshes = new Map<number, Mesh[]>();
+    const rockMat = material('rock', '#778087'), foodMat = material('food', '#A85264'), waterMat = material('water', '#4A9FC9');
+    simulation.state.nodes.forEach(node => {
+      const meshes: Mesh[] = [];
+      if (node.type === 'wood') {
+        const trunk = MeshBuilder.CreateCylinder(`trunk-${node.id}`, { height: 1, diameter: 0.25 }, scene); trunk.position.set(node.x, 0.5, node.z); trunk.material = bark;
+        const crown = MeshBuilder.CreateSphere(`tree-${node.id}`, { diameter: 1.2, segments: 6 }, scene); crown.position.set(node.x, 1.4, node.z); crown.material = leaves;
+        meshes.push(trunk, crown);
+      } else {
+        const mesh = node.type === 'water'
+          ? MeshBuilder.CreateCylinder(`water-${node.id}`, { height: 0.6, diameter: 0.8 }, scene)
+          : MeshBuilder.CreateSphere(`${node.type}-${node.id}`, { diameter: 0.9, segments: 4 }, scene);
+        mesh.position.set(node.x, 0.35, node.z);
+        mesh.material = node.type === 'stone' ? rockMat : node.type === 'food' ? foodMat : waterMat;
+        meshes.push(mesh);
+      }
+      nodeMeshes.set(node.id, meshes);
     });
     const zombies = new Map<number, Mesh>();
     engine.runRenderLoop(() => {
       simulation.update(Math.min(engine.getDeltaTime() / 1000, 0.1));
       const state = simulation.state;
       cappy.position.set(state.cappyPosition.x, 0.58, state.cappyPosition.z);
-      for (const tree of state.trees) trees.get(tree.id)?.forEach(mesh => mesh.setEnabled(tree.alive));
+      for (const node of state.nodes) nodeMeshes.get(node.id)?.forEach(mesh => mesh.setEnabled(node.alive));
       for (const zombie of state.zombies) {
         if (!zombies.has(zombie.id)) {
           const mesh = MeshBuilder.CreateBox(`zombie-${zombie.id}`, { height: 1, width: 0.55, depth: 0.55 }, scene); mesh.material = zombieMat; zombies.set(zombie.id, mesh);
@@ -49,5 +61,5 @@ export function World({ simulation }: { simulation: Simulation }) {
     const observer = new ResizeObserver(() => engine.resize()); observer.observe(canvas.current!);
     return () => { observer.disconnect(); scene.dispose(); engine.dispose(); };
   }, [simulation]);
-  return <canvas ref={canvas} aria-label="3D game world with Cappy, a base, chest, trees and zombies" />;
+  return <canvas ref={canvas} aria-label="3D game world with Cappy, a base, chest, wood, stone, food, water and zombies" />;
 }

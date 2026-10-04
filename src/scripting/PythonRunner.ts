@@ -1,4 +1,4 @@
-import { Simulation } from '../game/Simulation';
+import { HordeEndedError, Simulation } from '../game/Simulation';
 import type { Action } from '../game/types';
 export interface RunnerState { ready: boolean; running: boolean; output: string }
 export class PythonRunner {
@@ -14,7 +14,7 @@ export class PythonRunner {
     }
     const worker = new Worker('/python-worker.js');
     this.worker = worker;
-    this.reply = new Int32Array(new SharedArrayBuffer(8));
+    this.reply = new Int32Array(new SharedArrayBuffer(4096));
     const reply = this.reply;
     worker.onmessage = async ({ data }) => {
       if (this.worker !== worker) return;
@@ -24,17 +24,24 @@ export class PythonRunner {
       if (data.type === 'ERROR') { this.publish({ running: false }); this.append(data.text); }
       if (data.type === 'ACTION') {
         try {
-          const result = await this.simulation.action(data.action as Action, data.direction);
+          const result = await this.simulation.action(data.action as Action, data.argument);
           if (this.worker !== worker) return;
-          Atomics.store(reply, 1, result); Atomics.store(reply, 0, 1); Atomics.notify(reply, 0);
+          this.respond(reply, { value: result });
         } catch (error) {
           if (this.worker !== worker) return;
-          this.append(String(error)); Atomics.store(reply, 0, -1); Atomics.notify(reply, 0);
+          this.respond(reply, error instanceof HordeEndedError ? { ended: true } : { error: error instanceof Error ? error.message : String(error) });
         }
       }
     };
     worker.onerror = event => this.publish({ running: false, ready: false, output: `Worker error: ${event.message}. Press Stop to reload Python.` });
     worker.postMessage({ type: 'INIT', buffer: reply.buffer });
+  }
+  private respond(reply: Int32Array, result: { value?: number | string | boolean; error?: string; ended?: boolean }) {
+    const bytes = new TextEncoder().encode(JSON.stringify(result));
+    new Uint8Array(reply.buffer, 8).set(bytes);
+    Atomics.store(reply, 1, bytes.length);
+    Atomics.store(reply, 0, 1);
+    Atomics.notify(reply, 0);
   }
   run(code: string) {
     if (!this.state.ready || this.state.running) return;
